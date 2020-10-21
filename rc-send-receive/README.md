@@ -1,0 +1,2 @@
+基于RC实现最基本的client-server
+通过send/receive
