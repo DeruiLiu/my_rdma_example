@@ -12,7 +12,6 @@
 
 #include "setup_ib.h"
 
-
 enum ibv_mtu ib_mtu_to_enum(int mtu)
 {
     switch (mtu) {
@@ -30,11 +29,6 @@ enum ibv_mtu ib_mtu_to_enum(int mtu)
             return -1;
     }
 }
-
-enum {
-    IB_RECV_WRID = 1,
-    IB_SEND_WRID = 2,
-};
 
 void usage(const char *argv0)
 {
@@ -79,11 +73,11 @@ struct ibcontext *ib_init_ctx(struct ibv_device *ib_dev, unsigned long long size
 
     ctx->size = size;
     ctx->rx_depth = rx_depth;
-	ctx->buf = memalign(sysconf(_SC_PAGESIZE),size);
-	if(!ctx->buf){
-		fprintf(stderr,"Couldn't allocate work buf.\n");
-		goto clean_ctx;
-	}
+    ctx->buf = memalign(sysconf(_SC_PAGESIZE), size);
+    if (!ctx->buf) {
+        fprintf(stderr, "Couldn't allocate work buf.\n");
+        goto clean_ctx;
+    }
 
     ctx->context = ibv_open_device(ib_dev); // 根据设备名打开设备，返回IB上下文
     if (!ctx->context) {
@@ -97,6 +91,7 @@ struct ibcontext *ib_init_ctx(struct ibv_device *ib_dev, unsigned long long size
         goto clean_pd;
     }
 
+    // 注册内存时给该内存一个权限
     ctx->mr = ibv_reg_mr(ctx->pd, ctx->buf, size, IBV_ACCESS_LOCAL_WRITE);
     if (!ctx->mr) {
         fprintf(stderr, "Couldn't register MR\n");
@@ -264,8 +259,11 @@ struct ibdest *ib_server_exch_dest(int port, const struct ibdest *my_dest)
 
     // 将message中的数据写入到指定字符串中
     sscanf(msg, "%x:%x:%x:%s", &rem_dest->lid, &rem_dest->qpn, &rem_dest->psn, gid);
-    gid_to_wire_gid(&my_dest->gid, gid);
+    wire_gid_to_gid(gid, &rem_dest->gid);
 
+
+    gid_to_wire_gid(&my_dest->gid, gid);
+	//将后面的信息写入到message中
     sprintf(msg, "%04x:%06x:%06x:%s", my_dest->lid, my_dest->qpn, my_dest->psn, gid);
     if (write(connfd, msg, sizeof msg) != sizeof msg) {
         fprintf(stderr, "Couldn't send local address \n");
@@ -347,14 +345,20 @@ struct ibdest *ib_client_exch_dest(const char *servername, int port, const struc
         fprintf(stderr, "Couldn't read remote address \n");
         goto out;
     }
+	
 
     if (write(sockfd, "done", sizeof("done")) != sizeof("done")) {
         fprintf(stderr, "Couldn't send \"done\" msg \n");
         goto out;
     }
 
-    sscanf(msg, "%x:%x:%x:%s", &rem_dest->lid, &rem_dest->qpn, &rem_dest->psn, gid);
+	rem_dest = malloc(sizeof *rem_dest);
+	if (!rem_dest)
+		goto out;
+		
+	sscanf(msg, "%x:%x:%x:%s", &rem_dest->lid, &rem_dest->qpn, &rem_dest->psn, gid);
     wire_gid_to_gid(gid, &rem_dest->gid);
+    
 
 out:
     close(sockfd);
@@ -381,6 +385,13 @@ int connect_between_qps(struct ibcontext *ctx, int port, int my_psn, enum ibv_mt
 	};
 
     enum ibv_qp_attr_mask attr_mask;
+
+	if (dest->gid.global.interface_id) {//这是啥意思
+		attr.ah_attr.is_global = 1;
+		attr.ah_attr.grh.hop_limit = 1;
+		attr.ah_attr.grh.dgid = dest->gid;
+		attr.ah_attr.grh.sgid_index = sgid_idx;
+	}
 
     attr_mask = IBV_QP_STATE | IBV_QP_AV | IBV_QP_PATH_MTU | IBV_QP_DEST_QPN | IBV_QP_RQ_PSN |
         IBV_QP_MAX_DEST_RD_ATOMIC | IBV_QP_MIN_RNR_TIMER;
