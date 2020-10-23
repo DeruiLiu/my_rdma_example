@@ -109,7 +109,7 @@ struct ibcontext *ib_init_ctx(struct ibv_device *ib_dev, unsigned long long size
 			.send_cq = ctx->cq,
             .recv_cq = ctx->cq,
             .cap	 = {
-                .max_send_wr = 1,
+                .max_send_wr = rx_depth,
                 .max_recv_wr = rx_depth,
                 .max_send_sge = 1,
                 .max_recv_sge = 1
