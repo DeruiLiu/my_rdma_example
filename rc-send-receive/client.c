@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     int ib_port = 1;
     unsigned long long size = 4096;
     enum ibv_mtu mtu = IBV_MTU_1024;
-    int rx_depth = 500; // 接收队列的最大深度
+    int rx_depth = 1000; // 接收队列的最大深度
     int iters = 1000;
     int routs;
     int rcnt, scnt;
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
         float usec = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
         long long bytes = (long long)size * iters;
         float time_gap = end.tv_usec - start.tv_usec;
-        printf("timegap is %f \n", time_gap);
+        printf("timegap is %f \n", usec);
         printf("%lld bytes in %.2f seconds = %.2f Mbit/sec\n", bytes, usec / 1000000., bytes * 8. / usec);
         printf("%d iters in %.2f seconds = %.2f usec/iter\n", iters, usec / 1000000., usec / iters);
     }
