@@ -59,3 +59,4 @@ void gid_to_wire_gid(const union ibv_gid *gid, char wgid[]);
 enum ibv_mtu ib_mtu_to_enum(int mtu);
 
 #endif
+
