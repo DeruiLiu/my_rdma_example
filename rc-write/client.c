@@ -1,4 +1,3 @@
-
 /*
 use basic api to establish a basic connect
 basic client-server with send/receive
@@ -239,10 +238,9 @@ int main(int argc, char *argv[])
     ctx->raddr = remote_mr.raddr;
     }
     
-    // ctx->pending |= IB_SEND_WRID;
 
     if (post_send(ctx)) {
-        fprintf(stderr, "Could n't post info send \n");
+        fprintf(stderr, "Could n't post send \n");
         return 1;
     }
 
@@ -250,7 +248,6 @@ int main(int argc, char *argv[])
         perror("gettimeofday");
         return 1;
     }
-
     // 正式开始发送数据
     rcnt = scnt = 0;
     while (scnt < iters) {
@@ -262,7 +259,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "poll CQ failed %d \n", ne);
                 return 1;
             }
-        } while (ne < 1); // 因为发送队列为1，所以每次只能塞1个wr到发送队列中
+        } while (ne < 1); //
 
         for (int i = 0; i < ne; i++) {
             if (wc[i].status != IBV_WC_SUCCESS) {
