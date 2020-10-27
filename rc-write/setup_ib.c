@@ -459,7 +459,6 @@ int wait_completions(struct ibcontext *ctx,int wr_id){
         int n;
         do {
             n = ibv_poll_cq(ctx->cq, 2, wc);
-
             if (n < 0)
             {
                 fprintf(stderr, "Poll CQ failed %d\n", n);
@@ -545,7 +544,7 @@ void wire_gid_to_gid(const char *wgid, union ibv_gid *gid)
     for (tmp[8] = 0, i = 0; i < 4; ++i) {
         memcpy(tmp, wgid + i * 8, 8);
         sscanf(tmp, "%x", &v32);
-        raw[i] = ntohl(v32);
+        raw[i] = ntohl(v32);//network to host long
     }
 }
 
