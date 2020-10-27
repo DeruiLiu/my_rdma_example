@@ -208,12 +208,9 @@ int main(int argc, char *argv[])
 
     //将自己的key和addr发送给client
     {
-        // ctx -> pending = IB_RECV_WRID;
-    struct ib_Remote_mr remote_mr = {
-        .raddr = (uint64_t)ctx->buf,
-        .rkey = ctx->mr->rkey,
-    };
+    struct ib_Remote_mr remote_mr;
 
+    //先通过send/receive交换双方的rkey和addr，接下来再通过write方式进行通信
     if(info_post_recv(ctx,sizeof(struct ib_Remote_mr))){
         fprintf(stderr,"Could n't post info recv\n");
         return 1;
@@ -223,8 +220,11 @@ int main(int argc, char *argv[])
     ctx->rkey = remote_mr.rkey;
     ctx->raddr = remote_mr.raddr;
 
+    remote_mr.rkey = ctx->mr->rkey;
+    remote_mr.raddr = ctx->buf;
+
     memcpy(ctx->buf,&remote_mr,sizeof(struct ib_Remote_mr));
-    //先通过send/receive交换双方的rkey和addr，接下来再通过write方式进行通信
+   
     if (info_post_send(ctx,sizeof(struct ib_Remote_mr))) {
         fprintf(stderr, "Could n't post info send \n");
         return 1;
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "poll CQ failed %d \n", ne);
                 return 1;
             }
-        } while (ne < 1); // 因为发送队列为1，所以每次只能塞1个wr到发送队列中
+        } while (ne < 1); 
 
         for (int i = 0; i < ne; i++) {
             if (wc[i].status != IBV_WC_SUCCESS) {
@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
                     (int)wc[i].wr_id);
                 return 1;
             }
-            if ((int)wc[i].wr_id == IB_RECV_WRID) {
+            if ((int)wc[i].wr_id == IB_RECV_WRID) {//包含上轮send时产生的一个SEND_WRID
                 if (--routs <= 1) {
                     routs += ib_post_recv(ctx, ctx->rx_depth - routs);
                     if (routs < ctx->rx_depth) {
@@ -269,19 +269,11 @@ int main(int argc, char *argv[])
                     }
                 }
                 ++rcnt;
-            } else {
+            }
+            else {
                 fprintf(stderr, "Completion for unknown wr_id %d\n", (int)wc[i].wr_id);
                 return 1;
             }
-
-            /*
-            if (scnt < iters) {
-                if (post_send(ctx)) {
-                    fprintf(stderr, "Couldn't post send\n");
-                    return 1;
-                }
-            }
-            */
         }
     }
 
