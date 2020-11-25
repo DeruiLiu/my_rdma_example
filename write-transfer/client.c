@@ -102,16 +102,17 @@ static void on_completion(struct ibv_wc *wc){
 
             printf("received MR, sending file name\n");
             send_file_name(id);
+            post_receive(id);
 
         }else if(ctx->msg->id == MSG_READY){
             printf("received READY, sending chunk\n");
             send_next_chunk(id);
+            post_receive(id);
         }else if(ctx->msg->id == MSG_DONE){
             printf("received DONE, disconnecting \n");
             rc_disconnect(id);
         }
-
-        post_receive(id);
+        
     }
 }
 
