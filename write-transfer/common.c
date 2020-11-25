@@ -195,7 +195,7 @@ void rc_server_loop(const char* port){
     TEST_NZ(rdma_bind_addr(listener,(struct sockaddr *)&addr));
     TEST_NZ(rdma_listen(listener,10));
 
-    event_loop(ec,0);
+    event_loop(ec,1);
 
     rdma_destroy_id(listener);
     rdma_destroy_event_channel(ec);
