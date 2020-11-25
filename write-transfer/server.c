@@ -111,7 +111,6 @@ static void on_completion(struct ibv_wc *wc){
             if(ctx->fd == -1) rc_die("open() failed");
 
             post_receive(id);
-
             ctx->msg->id = MSG_READY;
             send_message(id);
         }
