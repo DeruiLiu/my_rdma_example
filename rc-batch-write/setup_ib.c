@@ -73,7 +73,7 @@ struct ibcontext *ib_init_ctx(struct ibv_device *ib_dev, unsigned long long size
 
     ctx->size = size;//分配内存的大小
     ctx->rx_depth = rx_depth;
-    ctx->buf = memalign(sysconf(_SC_PAGESIZE), size*2);//即从此处开始分配了这么多内存,*2是为了一次连接两个wr
+    ctx->buf = memalign(sysconf(_SC_PAGESIZE), size*4);//即从此处开始分配了这么多内存,*2是为了一次连接两个wr
     if (!ctx->buf) {
         fprintf(stderr, "Couldn't allocate work buf.\n");
         goto clean_ctx;
@@ -92,7 +92,7 @@ struct ibcontext *ib_init_ctx(struct ibv_device *ib_dev, unsigned long long size
     }
 
     // 注册内存时给该内存一个权限
-    ctx->mr = ibv_reg_mr(ctx->pd, ctx->buf, size * 2, IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ);
+    ctx->mr = ibv_reg_mr(ctx->pd, ctx->buf, size * 4, IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ);
     if (!ctx->mr) {
         fprintf(stderr, "Couldn't register MR\n");
         goto clean_mr;
@@ -499,7 +499,7 @@ int post_send(struct ibcontext *ctx)
 
     struct ibv_send_wr *bad_wr;
     struct ibv_send_wr *wr = ctx->send_wrs;
-    wr[0].send_flags = IBV_SEND_SIGNALED;
+    wr[1].send_flags = IBV_SEND_SIGNALED;
     return ibv_post_send(ctx->qp, &wr, &bad_wr);
 }
 
