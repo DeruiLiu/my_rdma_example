@@ -233,9 +233,8 @@ int main(int argc, char *argv[])
     ctx->rkey = remote_mr.rkey;
     ctx->raddr = remote_mr.raddr;
 
-    
 
-    //初始化一次发送多少数据，即一个batch,假设此处一个batch连接两个wr
+    //初始化一次发送多少数据，即一个batch,假设此处一个batch size为2
     ctx->send_wrs = (struct ibv_send_wr *)calloc(2,sizeof(struct ibv_send_wr));
     ctx->send_sges = (struct ibv_sge *)calloc(2,sizeof(struct ibv_sge));
 
@@ -246,7 +245,7 @@ int main(int argc, char *argv[])
         ctx->send_sges[i].lkey = ctx->mr->lkey;
         send_buf_ptr += size;
     }
-    uint64_t raddr = ctx->raddr;
+    uint64_t raddr = ctx->raddr;//接下来即为要写到对端的地址
     int i = 0;
     for(i = 0; i < 1; i ++){
         ctx->send_wrs[i].next = &ctx->send_wrs[i + 1];
