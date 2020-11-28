@@ -111,8 +111,8 @@ struct ibcontext *ib_init_ctx(struct ibv_device *ib_dev, unsigned long long size
             .cap	 = {
                 .max_send_wr = rx_depth,
                 .max_recv_wr = rx_depth,
-                .max_send_sge = 1,
-                .max_recv_sge = 1
+                .max_send_sge = 10,
+                .max_recv_sge = 10
 			},
             .qp_type = IBV_QPT_RC, //以RC方式通信
 		};
@@ -500,7 +500,9 @@ int post_send(struct ibcontext *ctx)
     struct ibv_send_wr *bad_wr;
     struct ibv_send_wr *wr = ctx->send_wrs;
     wr[1].send_flags = IBV_SEND_SIGNALED;
-    return ibv_post_send(ctx->qp, &wr, &bad_wr);
+    int ret = ibv_post_send(ctx->qp, &wr, &bad_wr);
+    printf("post send failed %d\n",ret);
+    return ret;
 }
 
 int ib_close_ctx(struct ibcontext *ctx)
