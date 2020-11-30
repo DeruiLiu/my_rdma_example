@@ -499,9 +499,9 @@ int post_send(struct ibcontext *ctx)
 
     struct ibv_send_wr *bad_wr;
     struct ibv_send_wr *wr = ctx->send_wrs;
-    wr[1].send_flags = IBV_SEND_SIGNALED;
-    int ret = ibv_post_send(ctx->qp, &wr, &bad_wr);
-    printf("post send failed %d\n",ret);
+    wr[1].send_flags = IBV_SEND_SIGNALED;//即写成功最后一个wr时本端产生cq
+    int ret = ibv_post_send(ctx->qp, wr, &bad_wr);
+    //printf("post send failed %d\n",ret);
     return ret;
 }
 
